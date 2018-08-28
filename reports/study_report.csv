@@ -1,0 +1,12 @@
+label,device_id,device_brand,start_date,games_count,medication_count,survey_count,notifications_count
+Participant 01,974933df-1681-4c2d-8006-20a59327e81a,HONOR PRA-LX1,2018-07-05,251(2981),36(2076),30(30),251(895)
+Participant 02,87be2da7-8413-4345-bbd4-687e83c369ad,samsung SM-G955F,2018-07-08,123(128),160(160),27(27),221(222)
+Participant 03,900459ad-aea2-45d3-9a2b-930c677d0795,samsung GT-I9195,2018-07-07,12(136),37(71),37(48),288(288)
+Participant 04,19156017-dafb-437e-a371-844caf6452c6,Doro Doro 8030/8031/8028,2018-07-11,116(116),156(158),48(48),446(452)
+Participant 05,b26a9b78-17c9-447a-83b5-9a511ec52ae6,samsung SM-G930F,2018-07-09,160(160),18(18),10(10),42(42)
+Participant 06 | iOS,e2e8a376-9dbb-4b87-9c4d-30ff11d7f22c,iPad iPad,2018-07-13,175(177),178(178),65(65),0(0)
+Participant 07 | Upd 1,34ccaa7f-3ad4-4a5c-bfc9-f07ee3191b90,samsung SM-A310F,2018-08-01,53(53),79(79),8(8),138(138)
+Participant 08 | p01M,e5981cc8-d738-465f-89a4-cbe9b1a54071,motorola XT1562,2018-08-02,135(139),127(127),30(30),222(222)
+Participant 09 | p02M,d4cfded4-3845-4e9b-8cfd-fecf0c8b644e,iPhone iPhone,2018-08-07,74(78),84(84),21(21),136(136)
+Participant 10 | p03M,8a7ca54e-7db8-458e-8b87-b024561cd719,iPhone iPhone,2018-08-07,92(215),88(88),25(25),140(144)
+Participant 11 | p04M,da4b523b-55a2-4040-ae05-b8a8baf1e9e1,motorola XT1562,2018-08-09,147(147),76(77),20(20),161(161)

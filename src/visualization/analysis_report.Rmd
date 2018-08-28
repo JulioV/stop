@@ -1,0 +1,178 @@
+---
+title: "STOP Data Analysis Report"
+author: "Julio Vega"
+date: "15 August 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+source("../data/common_source.R")
+source("visualisations.R")
+```
+## If new data comes in run:
+
+1. Correct the JSON formatting bug (comma instead of bracket) for P08 and P11 with `correct_ball_game_data_bug.R` (only if the study is still ongoing).
+1. `sql_table_to_csv.R`. Takes a while because of game data.
+1. `clean_data.R`. There is a second bug for P11 that produces bad JSON game data, if you find this, you need to look for the specific row (tail+print) and then add it to line 102 of `clean_data.R`
+2. `generate_study_report.R`
+3. Then `knit` this report
+
+## Data dumping
+All 4 tables `r tables_names` are dumped into CSV files using `sql_table_to_csv.R`
+
+### Data dumping from a SQLite database
+Put the SQLite database in data/raw/sqlite/pX and then run in Linux or WSL `python3 Migrating_data_from_SQLite_to_MySQL.py -se ../../data/raw/sqlite`
+
+## Data cleaning 
+Script `clean_data.R` does the following:
+
+- For medication
+    * It converts the DB timestamp into a date
+    * It converts the medication timestamp into a date into `intake_time`
+- For notifications
+    - Translate period labels from Finish to English
+    - Filter out buggy notifications
+        - **TODO** Ask Yukki how notifications were logged on iOS, they are different compared to Android
+        - **TODO** There's a possible bug on the notificion log in Android related to evening notifications. `filter_out_buggy_notifications` method is taking care of this but might no be 100% precise
+- For diary survey
+      - It converts the DB timestamp into a date
+- For ball game
+      - It converts the DB timestamp into a date
+      - It splits the game sensors into 4 files: accelerometer, gyro, rotation, linear accelerometer, with the game date on each sensor row
+
+
+## Data up to August 27th
+
+Run script `generate_study_report.R` to update the report table.
+
+Considerations:
+
+- P01, P02, P03, P05, P07 are missing some data due to the certificate issue (have to update the app and sync manually). P01, 2, 4, 6, 7 have complete data now. **TODO** P03 data is pending to be retrived.
+
+- P05 uninstalled the app before retriving data. Data is lost.
+
+- We got P04's data from their SQLite database. Dumped to the server using `migrating_data_from_SQLite_to_MySQL.py`. 
+
+- Ball game JSON data was malformed for P04, P07, P08, P11, fixed using `correct_ball_game_data_bug.R`. 1 game had invalid information for P04 `filter(X_id != 477)` and 3 for P11 `filter(_id != 1345 & _id != 1316 & _id != 5113)`.
+
+- In ball game, the linear accelerometer and rotation records for P06 sometimes didn't have any values. Filtered those out.
+
+- We have complete data from P06: 175 games, 178 medication logs, and 65 symptom survey (two per day). For some reason, there are no notification logs **TODO** Ask Yukki.
+
+
+```{r echo=FALSE}
+report = read.csv( "../../reports/study_report.csv",  stringsAsFactors = F)
+knitr::kable(report, caption = "Study Report", align = "c")
+```
+
+
+## Medication intake
+```{r echo=FALSE, fig.height=25, fig.width=15, warning=FALSE}
+
+visualise_medication()
+```
+
+## Notification compliance
+
+We have to notification events:
+
+1. Shown
+2. Open
+
+We have five notification periods:
+
+1. morning (8:00 - 11:59)
+1. noon (12:00 - 14:59)
+1. afternoon (15:00 - 18:59)
+1. evening (19:00 - 21:59)
+1. dailysymptoms (10:00 - 11:00)
+
+Need to double check this data as iOS notifications and evening notifications on Android might be wrongly processed. **TODO** Dailysymptoms rate is over 1.0 for P10, check with Yuuki.
+
+The mean time plot shows the SD as well. If there is no SD whiskers is because there was only 1 notification that was open after being shown
+
+```{r echo=FALSE, fig.height=10, fig.width=15, warning=FALSE}
+visualise_notifications()
+```
+
+## Diary scores
+
+We have 5 posible scores 0-4
+
+```{r echo=FALSE, fig.height=10, fig.width=15, warning=FALSE}
+visualise_diary()
+```
+
+## Game scores
+
+Game scores are averaged within bins of 30 or 60 minutes since their last medication
+
+```{r echo=FALSE, fig.height=25, fig.width=15, warning=FALSE, message = FALSE}
+visualise_meds_games()
+```
+
+## Game accelerometer data
+
+Game accelerometer data within bins of 60 minutes since their last medication
+
+```{r echo=FALSE, fig.height=105, fig.width=10, warning=FALSE, message = FALSE}
+visualise_movement_sensor("ball_game_acc", "accelerometer")
+```
+
+## Game gyroscope data
+
+Game gyroscope data within bins of 60 minutes since their last medication
+
+```{r echo=FALSE, fig.height=105, fig.width=10, warning=FALSE, message = FALSE}
+visualise_movement_sensor("ball_game_gyr", "gyroscope")
+```
+
+## Game rotation data
+
+Game rotation data within bins of 60 minutes since their last medication
+
+```{r echo=FALSE, fig.height=105, fig.width=10, warning=FALSE, message = FALSE}
+visualise_movement_sensor("ball_game_rota", "rotation")
+```
+
+## Game linear accelerometer data
+
+Game linear accelerometer data within bins of 60 minutes since their last medication
+
+```{r echo=FALSE, fig.height=105, fig.width=10, warning=FALSE, message = FALSE}
+visualise_movement_sensor("ball_game_lacc", "linear accelerometer")
+```
+
+## Game's mean/sd of sd of accelerometer magnitude data
+
+Game mean/sd of the sd of accelerometer magnitude within bins of 30/60 minutes since their last medication
+
+```{r echo=FALSE, fig.height=25, fig.width=15, warning=FALSE, message = FALSE}
+visualise_sd_sensor_games("ball_game_acc", "accelerometer")
+```
+
+## Game's mean/sd of sd of gyroscope magnitude data
+
+Game mean/sd of the sd of gyroscope magnitude within bins of 30/60 minutes since their last medication
+
+```{r echo=FALSE, fig.height=25, fig.width=15, warning=FALSE, message = FALSE}
+visualise_sd_sensor_games("ball_game_gyr", "gyroscope")
+```
+
+## Game's mean/sd of sd of rotation magnitude data
+
+Game mean/sd of the sd of rotation magnitude within bins of 30/60 minutes since their last medication
+
+```{r echo=FALSE, fig.height=25, fig.width=15, warning=FALSE, message = FALSE}
+visualise_sd_sensor_games("ball_game_rota", "rotation")
+```
+
+## Game's mean/sd of sd of linear accelerometer magnitude data
+
+Game mean/sd of the sd of linear accelerometer magnitude within bins of 30/60 minutes since their last medication. **TODO** why are there less linear accelerometer games than accelerometer games?
+
+```{r echo=FALSE, fig.height=25, fig.width=15, warning=FALSE, message = FALSE}
+visualise_sd_sensor_games("ball_game_lacc", "linear accelerometer")
+```
+
