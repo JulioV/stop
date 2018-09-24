@@ -12,7 +12,7 @@ stopDB<-dbConnect(RMySQL::MySQL(),default.file=rmysql.settingsfile,group=rmysql.
 # P07 34ccaa7f-3ad4-4a5c-bfc9-f07ee3191b90
 # P08 e5981cc8-d738-465f-89a4-cbe9b1a54071
 # P11 da4b523b-55a2-4040-ae05-b8a8baf1e9e1
-query<-"SELECT * FROM ball_game WHERE device_id like 'da4b523b-55a2-4040-ae05-b8a8baf1e9e1'"
+query<-"SELECT * FROM ball_game WHERE device_id like '34ccaa7f-3ad4-4a5c-bfc9-f07ee3191b90'"
 
 rs = dbSendQuery(stopDB,query)
 table<- (dbFetch(rs))

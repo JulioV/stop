@@ -65,10 +65,9 @@ def main(args):
     load_dotenv(find_dotenv())
 
     engine = create_mysql_engine()
-
     if args.sqlite:
         for directory in args.sqlite:
-            pathlist = Path(directory).glob('**/*.db')
+            pathlist = Path(directory).glob('*.db')
             for db in pathlist:
                 get_sqlite_tables = "sqlite3 {} \"SELECT tbl_name FROM sqlite_master WHERE type='table' and tbl_name not like 'sqlite_%' AND tbl_name not like 'android_metadata' AND tbl_name not like 'scheduler';\"".format(db)
                 tables = subprocess.check_output(get_sqlite_tables, shell=True)

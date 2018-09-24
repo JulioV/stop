@@ -1,19 +1,33 @@
 library(tibble)
 library(anytime)
+library(lubridate)
 library(stringr)
 library(dplyr)
 library(purrr)
 library(tidyr)
 library(readr)
 library(jsonlite)
+
 source("data/common_source.R")
 
+get_tz <- function(p_id){
+  if(p_id %in% c("p01","p02","p03","p04","p05","p06","p07"))
+    return("Europe/Helsinki")
+  else
+    return("Europe/London")
+}
+
 clean_medication <- function(p_id){
+  tz = get_tz(p_id)
   medication = as.tibble(read.csv(get_file_path(p_id, "medication", parent_folder = "../data/raw"), sep="\t", stringsAsFactors = F))
-  medication = medication %>% filter(!duplicated(.[["timestamp"]])) %>% mutate(intake_time = anytime(double_medication / 1000))
+  medication = medication %>% filter(!duplicated(.[["timestamp"]])) %>% 
+                mutate(intake_time = anytime(double_medication / 1000, tz = tz))
 
   medication = add_column(medication, date_time = "", .after = 1)
-  medication$date_time = anytime(medication$timestamp / 1000)
+  medication$date_time = anytime(medication$timestamp / 1000, tz = tz)
+  
+  medication = medication %>% mutate(date_time=format(date_time, "%FT%H:%M:%S%z"),
+                                     intake_time=format(intake_time, "%FT%H:%M:%S%z")) 
   
   csv_path = get_file_path(p_id, "medication", parent_folder = "../data/processed")
   dir.create(dirname(csv_path), recursive=TRUE)
@@ -55,6 +69,7 @@ filter_out_buggy_notifications <- function(data){
 }
 
 clean_notifications <- function(p_id){
+  tz = get_tz(p_id)
   notifications = as.tibble(read.csv(get_file_path(p_id, "notification_data", parent_folder = "../data/raw"), sep="\t", stringsAsFactors = F))
   notifications = notifications %>% filter(!duplicated(.[["timestamp"]]))
   notifications$event <- sapply(notifications$event, 
@@ -70,9 +85,10 @@ clean_notifications <- function(p_id){
   notifications$period = str_replace(notifications$period, "daily survey", "dailysymptoms")
   notifications$period = str_replace(notifications$period, "dailysurvey", "dailysymptoms")
   notifications = add_column(notifications, date_time = "", .after = 1)
-  notifications$date_time = anytime(notifications$timestamp / 1000)
+  notifications$date_time = anytime(notifications$timestamp / 1000, tz = tz)
   
   notifications = filter_out_buggy_notifications(notifications)
+  notifications = notifications %>% mutate(date_time=format(date_time, "%FT%H:%M:%S%z")) 
   
   csv_path = get_file_path(p_id, "notification_data", parent_folder = "../data/processed")
   dir.create(dirname(csv_path), recursive=TRUE)
@@ -80,33 +96,32 @@ clean_notifications <- function(p_id){
 }
 
 clean_diary <- function(p_id){
+  tz = get_tz(p_id)
   diary = as.tibble(read.csv(get_file_path(p_id, "health", parent_folder = "../data/raw"), sep="\t", stringsAsFactors = F))
   diary = diary %>% filter(!duplicated(.[["timestamp"]]))
   diary = add_column(diary, date_time = "", .after = 1)
-  diary$date_time = anytime(diary$timestamp / 1000)
+  diary$date_time = anytime(diary$timestamp / 1000, tz = tz)
   
   csv_path = get_file_path(p_id, "health", parent_folder = "../data/processed")
   dir.create(dirname(csv_path), recursive=TRUE)
   write.table(diary, csv_path, row.names = F, quote = F, sep = "\t")
 }
 
+
 clean_game <- function(p_id){
+  tz = get_tz(p_id)
   game = as.tibble(readr::read_tsv(get_file_path(p_id, "ball_game", parent_folder = "../data/raw"), quote = ""))
   game = game %>% filter(!duplicated(.[["timestamp"]]))
   game = add_column(game, date_time = "", .after = 1)
-  game$date_time = anytime(game$timestamp / 1000)
+  game$date_time = anytime(game$timestamp / 1000, tz = tz)
   
   if(p_id == "p04")
     game = game %>% filter(`_id` != 477)
-  else if(p_id == "p11")
-    game = game %>% filter(`_id` != 1345 & `_id` != 1316 & `_id` != 5113)
-  
-  # game = tail(game,5)
-  # print(game)
-  
   
   acc = game %>%
-    mutate(json_data = map(data, ~ fromJSON(.))) %>% 
+    # mutate(json_data = map(data, ~ fromJSON(.))) %>% 
+    mutate(json_data = map(data, ~possibly(fromJSON, otherwise = list())(.))) %>% 
+    filter(lengths(json_data) != 0) %>% 
     mutate(gamedata = map(json_data, ~ .$gamedata %>% select(-samples))) %>% unnest(gamedata) %>% 
     mutate(accelerometer = map(json_data, ~ if(class(.$accelerometer) == "character") list() else .$accelerometer)) %>%
     mutate(n_accelerometer = map_dbl(accelerometer, length)) %>% filter(n_accelerometer > 0) %>% 
@@ -114,8 +129,10 @@ clean_game <- function(p_id){
     unnest(accelerometer, .drop = F)  %>% 
     select(-data, -json_data)
   
+  
   gyr = game %>%
-    mutate(json_data = map(data, ~ fromJSON(.))) %>% 
+    mutate(json_data = map(data, ~possibly(fromJSON, otherwise = list())(.))) %>% 
+    filter(lengths(json_data) != 0) %>% 
     mutate(gamedata = map(json_data, ~ .$gamedata %>% select(-samples))) %>% unnest(gamedata) %>% 
     mutate(gyroscope = map(json_data, ~ if(class(.$gyroscope) == "character") list() else .$gyroscope)) %>% 
     mutate(n_gyroscope = map_dbl(gyroscope, length)) %>% filter(n_gyroscope > 0) %>% 
@@ -124,7 +141,8 @@ clean_game <- function(p_id){
     select(-data, -json_data)
   
   rota = game %>%
-    mutate(json_data = map(data, ~ fromJSON(.))) %>% 
+    mutate(json_data = map(data, ~possibly(fromJSON, otherwise = list())(.))) %>% 
+    filter(lengths(json_data) != 0) %>% 
     mutate(gamedata = map(json_data, ~ .$gamedata %>% select(-samples))) %>% unnest(gamedata) %>% 
     mutate(rotation = map(json_data, ~ if(class(.$rotation) == "character") list() else .$rotation)) %>% 
     mutate(n_rotation = map_dbl(rotation, length)) %>% filter(n_rotation > 0) %>% 
@@ -133,7 +151,8 @@ clean_game <- function(p_id){
     select(-data, -json_data)
   
   lacc = game %>%
-    mutate(json_data = map(data, ~ fromJSON(.))) %>% 
+    mutate(json_data = map(data, ~possibly(fromJSON, otherwise = list())(.))) %>% 
+    filter(lengths(json_data) != 0) %>% 
     mutate(gamedata = map(json_data, ~ .$gamedata %>% select(-samples))) %>% unnest(gamedata) %>% 
     mutate(linearaccelerometer = map(json_data, ~ if(class(.$linearaccelerometer) == "character") list() else .$linearaccelerometer)) %>% 
     mutate(n_lacc = map_dbl(linearaccelerometer, length)) %>% filter(n_lacc > 0) %>% 
@@ -141,26 +160,30 @@ clean_game <- function(p_id){
     unnest(linearaccelerometer, .drop = F) %>% 
     select(-data, -json_data)
   
+  acc = acc %>% mutate(date_time=format(date_time, "%FT%H:%M:%S%z"))
   csv_path = get_file_path(p_id, "ball_game_acc", parent_folder = "../data/processed")
   dir.create(dirname(csv_path), recursive=TRUE)
   write.table(acc, csv_path, row.names = F, quote = F, sep = "\t")
   
+  gyr = gyr %>% mutate(date_time=format(date_time, "%FT%H:%M:%S%z"))
   csv_path = get_file_path(p_id, "ball_game_gyr", parent_folder = "../data/processed")
   dir.create(dirname(csv_path), recursive=TRUE)
   write.table(gyr, csv_path, row.names = F, quote = F, sep = "\t")
   
+  rota = rota %>% mutate(date_time=format(date_time, "%FT%H:%M:%S%z"))
   csv_path = get_file_path(p_id, "ball_game_rota", parent_folder = "../data/processed")
   dir.create(dirname(csv_path), recursive=TRUE)
   write.table(rota, csv_path, row.names = F, quote = F, sep = "\t")
   
+  lacc = lacc %>% mutate(date_time=format(date_time, "%FT%H:%M:%S%z"))
   csv_path = get_file_path(p_id, "ball_game_lacc", parent_folder = "../data/processed")
   dir.create(dirname(csv_path), recursive=TRUE)
   write.table(lacc, csv_path, row.names = F, quote = F, sep = "\t")
 }
 
-# If you want to clean the data of only certain participants uncomment line below
-# participants = c("p07" = "", "p08" = "","p09" = "","p10" = "","p11" = "")
-# participants = c("p11" = "")
+
+# If you want to clean the data of only certain participants uncomment & modify line below
+# participants = c("p07" = "", "p08" = "","p09" = "","p10" = "","p11" = "", "p12" = "", "p13" = "")
 
 clean_data <- function(){
   for(p_id in names(participants)){

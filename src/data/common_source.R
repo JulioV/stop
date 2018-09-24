@@ -8,9 +8,11 @@ participants = c("p01" = "974933df-1681-4c2d-8006-20a59327e81a",
                  "p08" = "e5981cc8-d738-465f-89a4-cbe9b1a54071",
                  "p09" = "d4cfded4-3845-4e9b-8cfd-fecf0c8b644e",
                  "p10" = "8a7ca54e-7db8-458e-8b87-b024561cd719",
-                 "p11" = "da4b523b-55a2-4040-ae05-b8a8baf1e9e1") 
+                 "p11" = "da4b523b-55a2-4040-ae05-b8a8baf1e9e1",
+                 "p12" = "b1c2e555-2829-40eb-a77a-d8b4b0a99751",
+                 "p13" = "66a0ff30-728c-40e3-8f42-5ca745cb3a53") 
 
-tables_names = c("aware_device","ball_game", "health", "medication", "notification_data")
+tables_names = c("aware_device","ball_game", "health", "medication", "notification_data", "consent")
 
 get_file_path <- function(p_id, folder, parent_folders = "../data/processed"){
   return(paste0(parent_folders,"/",folder,"/", p_id, ".csv"))

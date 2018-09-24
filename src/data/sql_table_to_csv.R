@@ -8,8 +8,11 @@ main <- function(args){
   rmysql.group<-"stop_release_1"
    
   
-  # If you want to update certain participants only uncomment line below
-  # participants = c("p11" = "da4b523b-55a2-4040-ae05-b8a8baf1e9e1")
+  # If you want to update certain participants only uncomment & modify line below
+  # participants = c("p11" = "da4b523b-55a2-4040-ae05-b8a8baf1e9e1",
+  #                  "p12" = "b1c2e555-2829-40eb-a77a-d8b4b0a99751",
+  #                  "p13" = "66a0ff30-728c-40e3-8f42-5ca745cb3a53")
+  #c("aware_device","ball_game", "health", "medication", "notification_data")
   
   for(p_id in names(participants)){
     print(p_id)

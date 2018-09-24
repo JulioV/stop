@@ -48,7 +48,7 @@ Run script `generate_study_report.R` to update the report table.
 
 Considerations:
 
-- P01, P02, P03, P05, P07 are missing some data due to the certificate issue (have to update the app and sync manually). P01, 2, 4, 6, 7 have complete data now. **TODO** P03 data is pending to be retrived.
+- P01, P02, P03, P05, P07 are missing some data due to the certificate issue (have to update the app and sync manually). P01, 2, 4, 6, 7 have complete data now.
 
 - P05 uninstalled the app before retriving data. Data is lost.
 
@@ -58,7 +58,7 @@ Considerations:
 
 - In ball game, the linear accelerometer and rotation records for P06 sometimes didn't have any values. Filtered those out.
 
-- We have complete data from P06: 175 games, 178 medication logs, and 65 symptom survey (two per day). For some reason, there are no notification logs **TODO** Ask Yukki.
+- We have complete data from P06: 175 games, 178 medication logs, and 65 symptom survey (two per day). There was a bug with notifications, therefore there are no notification logs for this participant.
 
 
 ```{r echo=FALSE}
@@ -88,7 +88,7 @@ We have five notification periods:
 1. evening (19:00 - 21:59)
 1. dailysymptoms (10:00 - 11:00)
 
-Need to double check this data as iOS notifications and evening notifications on Android might be wrongly processed. **TODO** Dailysymptoms rate is over 1.0 for P10, check with Yuuki.
+Need to double check this data as iOS notifications and evening notifications on Android might be wrongly processed. **TODO** Dailys ymptoms rate is over 1.0 for P10. There was a bug in iOS notifications.
 
 The mean time plot shows the SD as well. If there is no SD whiskers is because there was only 1 notification that was open after being shown
 

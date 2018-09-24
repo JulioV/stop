@@ -10,7 +10,6 @@ library(scales)
 library(purrr)
 source("../data/common_source.R")
 
-# There's a bug when this script is run after the others, restart R session
 
 plot_ts_date_time <- function(df, time, variable, start_date, title) {
   plot = ggplot(df) + 
@@ -91,8 +90,12 @@ visualise_notifications <- function(){
   rates = bind_rows(rates) %>% replace(is.na(.), 0)
   rates_plot = ggplot(rates) + geom_bar(aes(x = participant, y = event_count), stat = "identity") +  
       ylab("Notifications  opened/shown") +
+      theme(axis.text = element_text(size = 17),
+            axis.title=element_text(size=23)) + 
       ggtitle("Notificantions rates (opened/showed) all participants (periods combined)")
   grid.arrange(rates_plot)
+  
+  print(rates)
   
   # Notifications rate per time of day
   rates_per_event = map(.x = names(participants), .f = function(p_id){
