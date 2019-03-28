@@ -91,13 +91,6 @@ game_speed <- function(){
   write_csv(games, "../reports/game_sensitivity.csv")
 }
 
-get_tz <- function(p_id){
-  if(p_id %in% c("p01","p02","p03","p04","p05","p06","p07"))
-    return("Europe/Helsinki")
-  else
-    return("Europe/London")
-}
-
 meds_table <-  function(){
   all_actual_meds = tibble()
   for(p_id in names(participants)){

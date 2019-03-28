@@ -17,3 +17,10 @@ tables_names = c("aware_device","ball_game", "health", "medication", "notificati
 get_file_path <- function(p_id, folder, parent_folders = "../data/processed"){
   return(paste0(parent_folders,"/",folder,"/", p_id, ".csv"))
 }
+
+get_tz <- function(p_id){
+  if(p_id %in% c("p01","p02","p03","p04","p05","p06","p07"))
+    return("Europe/Helsinki")
+  else
+    return("Europe/London")
+}
