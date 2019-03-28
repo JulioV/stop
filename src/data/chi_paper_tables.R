@@ -201,12 +201,15 @@ correlation_score_sensitivity <- function(){
     group_by(participant) %>% 
     summarise(cor = list(cor.test(x = score, sensitivity, method = "kendall")), n = n()) %>% 
     rowwise() %>% 
-    mutate(stat = cor$statistic, p.value = cor$p.value, estimate = cor$estimate[[1]]) %>% 
-    mutate(p.value_str = ifelse(p.value <= 0.05, "<=0.05", as.character(round(p.value,3))),
-           estimate = round(estimate, 2),
-           stat = round(stat, 2)) %>% 
-    select(-cor, -p.value)
+    mutate(stat = cor$statistic, p.value = cor$p.value, estimate = cor$estimate[[1]])# %>% 
     
+  games$p.value.adjusted = p.adjust(games$p.value, method = "fdr")
+  games <- games %>% 
+    mutate(p.value_str = ifelse(p.value <= 0.05, "<=0.05", as.character(round(p.value,3))),
+           p.value.adjusted_str = ifelse(p.value.adjusted <= 0.05, "<=0.05", as.character(round(p.value.adjusted,3))),
+           estimate = round(estimate, 2),
+           stat = round(stat, 2)) %>%
+    select(-cor, -p.value, -p.value.adjusted)
   print(games, digits = 8)
   write_csv(games, "../reports/correlation_score_speed.csv")
   
@@ -278,13 +281,47 @@ adherence_trend_test <- function(){
     res_test = bind_rows(res_test, 
                          tibble(p_id = p_id, n = nrow(adherence), tau = res$estimates[[3]], p.value = res$p.value))
   }
-  
+  res_test$p.value.adjusted = p.adjust(res_test$p.value, method = "fdr")
   res_test = res_test %>% mutate(p.value_str = ifelse(p.value <= 0.05, "<=0.05", as.character(round(p.value,3))),
-                                 tau = round(tau, 3)) %>% 
-                          select(-p.value)
+                                 p.value_adjusted_str = ifelse(p.value.adjusted <= 0.05, "<=0.05", as.character(round(p.value.adjusted,3))),
+                                 tau = round(tau, 3)) %>%
+                          select(-p.value, -p.value.adjusted)
   print(res_test)
   write_csv(res_test, "../reports/adherence_test.csv")
   
+}
+
+mann_whitney_u_test <- function(){
+  library(coin)
+  
+  
+  sus <- read_csv("../data/processed/sus/sus_scores.csv", col_types = cols()) %>% 
+    t() %>% 
+    as.tibble() %>%
+    tail(-1) %>%
+    rownames_to_column()
+  
+  colnames(sus) = c("p", "country", "sus_1", "sus_2")
+  sus <- as.data.frame(sus) %>% mutate(country = as.integer(country), 
+                                       sus_1 = as.numeric(sus_1),
+                                       sus_2 = as.numeric(sus_2))
+  print(sus)
+  
+  
+  country_1 = (sus %>% filter(country == 1))$sus_2
+  country_2 = (sus %>% filter(country == 2))$sus_2
+  
+  # MannWhitney test
+  print(wilcox.test(country_1, country_2))
+  # Efect size
+  country = factor(sus$country)
+  print(wilcox_test(sus$sus_2 ~ country, distribution="exact"))
+  print("Effect size")
+  print(1.7262/sqrt(13))
+  # print("Pearson r")
+  # print(cor.test(country_1, country_2, method = "pearson"))
+  
+  # Values for Country 1 were not significantly different from those for Country 2 (U = 9, Z = -1.7262, p = 0.09207, r = 0.47).
 }
 
 # adherence_trend_test()
@@ -293,3 +330,5 @@ adherence_trend_test <- function(){
 # meds_plots()
 # game_speed()
 # game_speed_plots()
+# correlation_test()
+mann_whitney_u_test()
