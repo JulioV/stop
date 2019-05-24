@@ -8,6 +8,7 @@ library(anytime)
 library(lubridate)
 library(xts)
 library(trend)
+library(tidyr)
 source("data/common_source.R")
 
 diary_entries <- function(){
@@ -317,11 +318,12 @@ mann_whitney_u_test <- function(){
   # Values for Country 1 were not significantly different from those for Country 2 (U = 9, Z = -1.7262, p = 0.09207, r = 0.47).
 }
 
-# adherence_trend_test()
 # correlation_score_sensitivity()
 # meds_table()
 # meds_plots()
 # game_speed()
 # game_speed_plots()
 # correlation_test()
-mann_whitney_u_test()
+# mann_whitney_u_test()
+# save_medication_adherence()
+# adherence_trend_test()
